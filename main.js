@@ -2,6 +2,15 @@ let localStream;
 let remoteStream;
 let peerConnection;
 
+// grab info after creating a new project on agora.io
+let APP_ID = ''
+let token = null;
+
+let uid = String(Math.floor(Math.random() * 1000));
+
+let client;
+let channel;
+
 // create a stun server object
 const servers = {
     iceServer:[
@@ -13,14 +22,34 @@ const servers = {
 }
 
 let init = async () => {
+
+    // agora set up
+    client = await AgoraRTM.createInstance(APP_ID)
+    await client.login({uid, token})
+
+    channel = client.createChannel('main')
+    await channel.join()
+    channel.on('MemberJoined', handleUserJoined)
+
+    channel.on('MessageFromPeer', handleMessageFromPeer())
+
     // ask for permission to use camera for audio/video chat.
     localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false}) // Request permission to our camera/mic
     document.getElementById('user-1').srcObject = localStream;
 
-    createOffer()
+    
 }
 
-let createOffer = async () => {
+let handleMessageFromPeer = async (message, memberId) => {
+    console.log('handleMessageFromPeer Message:', message.text)
+}
+
+let handleUserJoined  = async (memberId) => {
+    console.log(' new member has joined! ', memberId)
+    createOffer(memberId)
+}
+
+let createOffer = async (memberId) => {
     // peerConnection will be the core interface to connect to users.
     peerConnection = new RTCPeerConnection(servers)
 
@@ -52,6 +81,6 @@ let createOffer = async () => {
     let offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer)
 
-    console.log("Offer:" + offer)
+    client.sendMessageToPeer({text:'Hey!'}, memberId)
 }
 init();
