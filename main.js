@@ -15,7 +15,7 @@ let channel;
 const servers = {
     iceServer:[
         {
-            urls:['stun:stun1.1.google.com:19302', 'stun:stun2.1.google.com:19302']
+            urls:['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302']
         }
 
     ]
@@ -31,7 +31,7 @@ let init = async () => {
     await channel.join()
     channel.on('MemberJoined', handleUserJoined)
 
-    channel.on('MessageFromPeer', handleMessageFromPeer())
+    client.on('MessageFromPeer', handleMessageFromPeer)
 
     // ask for permission to use camera for audio/video chat.
     localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false}) // Request permission to our camera/mic
@@ -42,12 +42,14 @@ let init = async () => {
 
 let handleMessageFromPeer = async (message, memberId) => {
     console.log('handleMessageFromPeer Message:', message.text)
+
 }
 
-let handleUserJoined  = async (memberId) => {
-    console.log(' new member has joined! ', memberId)
-    createOffer(memberId)
+let handleUserJoined = async (MemberId) => {
+    console.log('A new user joined the channel:', MemberId)
+    createOffer(MemberId)
 }
+
 
 let createOffer = async (memberId) => {
     // peerConnection will be the core interface to connect to users.
