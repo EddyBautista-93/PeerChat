@@ -41,7 +41,8 @@ let init = async () => {
 }
 
 let handleMessageFromPeer = async (message, memberId) => {
-    console.log('handleMessageFromPeer Message:', message.text)
+    message = JSON.parse(message.text)
+    console.log('handleMessageFromPeer Message:', message)
 
 }
 
@@ -75,7 +76,7 @@ let createOffer = async (memberId) => {
     // generate ice candidates 
     peerConnection.onicecandidate = async (event)  => {
         if(event.candidate){
-            console.log('new ice candidate:',event.candidate);
+            client.sendMessageToPeer({text:JSON.stringify({'type':'candidate', 'candidate': event.candidate})}, memberId)
         }
     }
 
@@ -83,6 +84,6 @@ let createOffer = async (memberId) => {
     let offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer)
 
-    client.sendMessageToPeer({text:'Hey!'}, memberId)
+    client.sendMessageToPeer({text:JSON.stringify({'type':'offer', 'offer': offer})}, memberId)
 }
 init();
