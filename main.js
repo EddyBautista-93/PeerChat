@@ -3,7 +3,7 @@ let remoteStream;
 let peerConnection;
 
 // grab info after creating a new project on agora.io
-let APP_ID = ''
+let APP_ID = '2089160e79104a82b93d41fa24a51a78'
 let token = null;
 
 let uid = String(Math.floor(Math.random() * 1000));
@@ -51,39 +51,50 @@ let handleUserJoined = async (MemberId) => {
     createOffer(MemberId)
 }
 
+let createPeerConnection = async (memberId) => {
+        // peerConnection will be the core interface to connect to users.
+        peerConnection = new RTCPeerConnection(servers)
+
+        // set up the remote streams
+        remoteStream = new MediaStream()
+        document.getElementById('user-2').srcObject = remoteStream; // have the stream ready before the user accepts the offer. 
+    
+        // in case the local stream is not initialized right away 
+        if(!localStream){
+            localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false}) // Request permission to our camera/mic
+            document.getElementById('user-1').srcObject = localStream;
+        }
+    
+        // get local tracks and add them to the connection so the remote peer can get them
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream)
+        });
+    
+        // add the other users track
+        peerConnection.ontrack = (event) => {
+            event.streams[0].getTracks().forEach((track) => {
+                remoteStream.addTrack(track)
+            })
+        }
+    
+        // generate ice candidates 
+        peerConnection.onicecandidate = async (event)  => {
+            if(event.candidate){
+                client.sendMessageToPeer({text:JSON.stringify({'type':'candidate', 'candidate': event.candidate})}, memberId)
+            }
+        }
+}
 
 let createOffer = async (memberId) => {
-    // peerConnection will be the core interface to connect to users.
-    peerConnection = new RTCPeerConnection(servers)
-
-    // set up the remote streams
-    remoteStream = new MediaStream()
-    document.getElementById('user-2').srcObject = remoteStream; // have the stream ready before the user accepts the offer. 
-
-
-    // get local tracks and add them to the connection so the remote peer can get them
-    localStream.getTracks().forEach((track) => {
-        peerConnection.addTrack(track, localStream)
-    });
-
-    // add the other users track
-    peerConnection.ontrack = (event) => {
-        event.streams[0].getTracks().forEach((track) => {
-            remoteStream.addTrack(track)
-        })
-    }
-
-    // generate ice candidates 
-    peerConnection.onicecandidate = async (event)  => {
-        if(event.candidate){
-            client.sendMessageToPeer({text:JSON.stringify({'type':'candidate', 'candidate': event.candidate})}, memberId)
-        }
-    }
-
+    await createPeerConnection(memberId);
     // create the offer
     let offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer)
 
     client.sendMessageToPeer({text:JSON.stringify({'type':'offer', 'offer': offer})}, memberId)
+}
+
+let createAnswer = async (memberId) => {
+    await createPeerConnection(memberId);
 }
 init();
