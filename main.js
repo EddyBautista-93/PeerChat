@@ -39,12 +39,27 @@ let init = async () => {
 
     
 }
-
 let handleMessageFromPeer = async (message, memberId) => {
+
     message = JSON.parse(message.text)
-    console.log('handleMessageFromPeer Message:', message)
+
+    if(message.type === 'offer'){
+        createAnswer(memberId, message.offer)
+    }
+
+    if(message.type === 'answer'){
+        addAnswer(message.answer)
+    }
+
+    if(message.type === 'candidate'){
+        if(peerConnection){
+            peerConnection.addIceCandidate(message.candidate)
+        }
+    }
+
 
 }
+
 
 let handleUserJoined = async (MemberId) => {
     console.log('A new user joined the channel:', MemberId)
@@ -94,7 +109,21 @@ let createOffer = async (memberId) => {
     client.sendMessageToPeer({text:JSON.stringify({'type':'offer', 'offer': offer})}, memberId)
 }
 
-let createAnswer = async (memberId) => {
+let createAnswer = async (memberId, offer) => {
     await createPeerConnection(memberId);
+
+    await peerConnection.setRemoteDescription(offer)
+    let answer = await peerConnection.createAnswer()
+    await peerConnection.setLocalDescription(answer)
+
+    // send sdp answer 
+    client.sendMessageToPeer({text:JSON.stringify({'type':'answer', 'answer': answer})}, memberId)
+
+}
+
+let addAnswer = async (answer) => {
+    if(!peerConnection.currentRemoteDescription){
+        peerConnection.setRemoteDescription(answer)
+    }
 }
 init();
