@@ -19,7 +19,7 @@
         form.addEventListener('submit', (e) => {
             e.preventDefault()
             // make it one word
-            let inviteCode = e.target.invite_link
+            let inviteCode = e.target.invite_link.value
             window.location=`index.html?room=${inviteCode}`
         })
     </script>

@@ -11,6 +11,12 @@ let uid = String(Math.floor(Math.random() * 1000));
 let client;
 let channel;
 
+let queryStr = window.location.search
+let urlParams = new URLSearchParams(queryStr)
+let roomId = urlParams.get('room')
+if(!roomId){
+    window.location = 'lobby.html'
+}
 // create a stun server object
 const servers = {
     iceServer:[
@@ -27,8 +33,8 @@ let init = async () => {
     client = await AgoraRTM.createInstance(APP_ID)
     await client.login({uid, token})
 
-
-    channel = client.createChannel('main')
+    
+    channel = client.createChannel(roomId)
     await channel.join()
     channel.on('MemberJoined', handleUserJoined)
 
