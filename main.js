@@ -41,7 +41,7 @@ let init = async () => {
     client.on('MessageFromPeer', handleMessageFromPeer)
 
     // ask for permission to use camera for audio/video chat.
-    localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false}) // Request permission to our camera/mic
+    localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true}) // Request permission to our camera/mic
     document.getElementById('user-1').srcObject = localStream;
 
     
@@ -80,6 +80,9 @@ let createPeerConnection = async (memberId) => {
         // set up the remote streams
         remoteStream = new MediaStream()
         document.getElementById('user-2').srcObject = remoteStream; // have the stream ready before the user accepts the offer. 
+        document.getElementById('user-2').style.display = 'block'
+        document.getElementById('user-1').classList.add('smallFrame')
+
     
         // in case the local stream is not initialized right away 
         if(!localStream){
@@ -133,4 +136,43 @@ let addAnswer = async (answer) => {
         peerConnection.setRemoteDescription(answer)
     }
 }
+
+let handleUserleft = (memberId) => {
+    document.getElementById('user-2').style.display = 'none'
+    document.getElementById('user-1').classList.remove('smallFrame')
+}
+
+let leaveChannel = async () => {
+    await channel.leave()
+    await client.logout()
+}
+
+
+let toggleCamera = async () => {
+    // let videoTrk = localStream.getTracks().find(track => track.kind === 'video')
+    let videoTrk = localStream.getTracks().find(track => track.kind === 'video')
+
+    if(videoTrk.enabled){
+        videoTrk.enabled = false
+        document.getElementById('camera-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    }else{
+        videoTrk.enabled = true
+        document.getElementById('camera-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+    }
+}
+
+let toggleMic = async () => {
+    let audioTrack = localStream.getTracks().find(track => track.kind === 'audio')
+
+    if(audioTrack.enabled){
+        audioTrack.enabled = false
+        document.getElementById('mic-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    }else{
+        audioTrack.enabled = true
+        document.getElementById('mic-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+    }
+}
+
+document.getElementById('camera-btn').addEventListener('click', toggleCamera);
+document.getElementById('mic-btn').addEventListener('click', toggleMic)
 init();
