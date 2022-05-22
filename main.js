@@ -3,7 +3,7 @@ let remoteStream;
 let peerConnection;
 
 // grab info after creating a new project on agora.io
-let APP_ID = '2089160e79104a82b93d41fa24a51a78'
+let APP_ID = ''
 let token = null;
 
 let uid = String(Math.floor(Math.random() * 1000));
@@ -26,6 +26,7 @@ let init = async () => {
     // agora set up
     client = await AgoraRTM.createInstance(APP_ID)
     await client.login({uid, token})
+
 
     channel = client.createChannel('main')
     await channel.join()
